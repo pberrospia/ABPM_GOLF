@@ -98,55 +98,16 @@ pip install -r requirements.txt
 
 ### Reinstalación limpia en Windows (corrige `ModuleNotFoundError: No module named 'aiosqlite'`)
 
-Si anteriormente creaste el entorno virtual con Python 3.14 o ves el error `ModuleNotFoundError: No module named 'aiosqlite'`,
-sigue estos pasos:
+Consulta la guía completa en [`docs/windows-reinstall.md`](docs/windows-reinstall.md) para una explicación minuciosa de cada paso. A modo de resumen:
 
-1. **Cerrar y eliminar el entorno anterior** (ejecuta ambos comandos dentro de la carpeta del proyecto):
-   ```powershell
-   deactivate  # ignora este paso si PowerShell indica que el comando no existe
-   Remove-Item -Recurse -Force .venv
-   ```
+1. Cierra las terminales activas y elimina el entorno anterior (`Remove-Item -Recurse -Force .venv`).
+2. Verifica que `py -3.11 --version` funcione y crea el nuevo virtualenv con `py -3.11 -m venv .venv`.
+3. En PowerShell permite scripts si es necesario (`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`) y activa el entorno (`.\.venv\Scripts\Activate.ps1`).
+4. Actualiza `pip` e instala las dependencias: `python -m pip install --upgrade pip` seguido de `pip install -r requirements.txt`.
+5. Comprueba que `pip show aiosqlite` devuelva información y ejecuta `python abpm_launcher.py setup`.
+6. Continúa con `python abpm_launcher.py create-user` y `python abpm_launcher.py serve` para usar la aplicación.
 
-2. **Verificar que Python 3.11 esté disponible**:
-   ```powershell
-   py -3.11 --version
-   ```
-   Si el comando no encuentra Python 3.11, descárgalo e instálalo desde [python.org](https://www.python.org/downloads/release/python-3110/).
-
-3. **Crear un nuevo entorno virtual usando Python 3.11**:
-   ```powershell
-   py -3.11 -m venv .venv
-   ```
-
-4. **Activar el entorno**:
-   - PowerShell (si ves un error de ejecución de scripts, ejecuta primero `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`):
-     ```powershell
-     .\.venv\Scripts\Activate.ps1
-     ```
-   - Consola clásica `cmd.exe`:
-     ```cmd
-     .venv\Scripts\activate.bat
-     ```
-
-5. **Actualizar `pip` e instalar los requisitos**:
-   ```powershell
-   python -m pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
-   `aiosqlite`, `email-validator` y el resto de dependencias se instalarán en este paso.
-
-6. **Inicializar la base de datos con el nuevo entorno**:
-   ```powershell
-   python abpm_launcher.py setup
-   ```
-
-7. **Crear el usuario inicial y arrancar el servidor** (idéntico a los pasos 4 y 5 de la guía principal).
-
-8. *(Opcional)* **Confirmar que `aiosqlite` está instalado** si el error persiste:
-   ```powershell
-   pip show aiosqlite
-   ```
-   Si el paquete no aparece, repite el paso 5 para reinstalar los requisitos.
+Si algún paso falla (por ejemplo, PowerShell bloquea la activación), la guía detallada ofrece soluciones específicas.
 
 ### Construir un ejecutable autónomo
 
