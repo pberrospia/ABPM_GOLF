@@ -96,7 +96,7 @@ pip install -r requirements.txt
 
    Se mostrará en pantalla el resumen de métricas y la clasificación según las guías ESC/ESH 2023.
 
-### Reinstalación limpia en Windows (corrige `ModuleNotFoundError: No module named 'aiosqlite'`)
+### Reinstalación limpia en Windows (corrige errores de inicialización de base de datos)
 
 Consulta la guía completa en [`docs/windows-reinstall.md`](docs/windows-reinstall.md) para una explicación minuciosa de cada paso. A modo de resumen:
 
@@ -104,7 +104,7 @@ Consulta la guía completa en [`docs/windows-reinstall.md`](docs/windows-reinsta
 2. Verifica que `py -3.11 --version` funcione y crea el nuevo virtualenv con `py -3.11 -m venv .venv`.
 3. En PowerShell permite scripts si es necesario (`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`) y activa el entorno (`.\.venv\Scripts\Activate.ps1`).
 4. Actualiza `pip` e instala las dependencias: `python -m pip install --upgrade pip` seguido de `pip install -r requirements.txt`.
-5. Comprueba que `pip show aiosqlite` devuelva información y ejecuta `python abpm_launcher.py setup`.
+5. Ejecuta `python abpm_launcher.py setup` para crear la base de datos. Si `pip` muestra una advertencia sobre `aiosqlite`, puedes continuar: la aplicación ahora usa un controlador alternativo automáticamente gracias al módulo `backend.aiosqlite` incluido en el repositorio.
 6. Continúa con `python abpm_launcher.py create-user` y `python abpm_launcher.py serve` para usar la aplicación.
 
 Si algún paso falla (por ejemplo, PowerShell bloquea la activación), la guía detallada ofrece soluciones específicas.

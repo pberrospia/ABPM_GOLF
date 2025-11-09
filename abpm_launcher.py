@@ -48,14 +48,12 @@ async def _initialize_database() -> None:
     try:
         from app.core.database import Base, engine
     except ModuleNotFoundError as exc:  # pragma: no cover - depende del entorno local
-        if exc.name == "aiosqlite":
-            console.print(
-                "[bold red]No se encontró el módulo 'aiosqlite'.[/bold red] "
-                "Instala las dependencias con [bold]pip install -r requirements.txt[/bold] "
-                "y vuelve a ejecutar el comando."
-            )
-            raise typer.Exit(code=1)
-        raise
+        console.print(
+            f"[bold red]No se encontró el módulo requerido '{exc.name}'.[/bold red] "
+            "Instala nuevamente las dependencias con [bold]pip install -r requirements.txt[/bold] "
+            "y vuelve a ejecutar el comando."
+        )
+        raise typer.Exit(code=1)
 
     settings.storage_dir.mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:

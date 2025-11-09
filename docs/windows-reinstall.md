@@ -1,6 +1,6 @@
-# Reinstalación limpia en Windows para corregir `ModuleNotFoundError: No module named 'aiosqlite'`
+# Reinstalación limpia en Windows cuando `pip` no consigue `aiosqlite`
 
-Este procedimiento repone el entorno virtual usando **Python 3.11** y reinstala las dependencias para que `aiosqlite` quede disponible antes de ejecutar `python abpm_launcher.py setup`.
+Este procedimiento repone el entorno virtual usando **Python 3.11** y reinstala las dependencias. Aun cuando `pip` muestre la advertencia «Package(s) not found: aiosqlite», la aplicación ahora utiliza automáticamente el controlador síncrono integrado de SQLite gracias al módulo `backend.aiosqlite` incluido en el repositorio, por lo que podrás inicializar la base de datos igualmente. Los pasos siguientes ayudan a dejar el entorno limpio y minimizan los mensajes de error.
 
 > ℹ️ Ejecuta cada comando desde **PowerShell** o **cmd.exe** abierto en la carpeta raíz del proyecto (`ABPM_GOLF`).
 
@@ -75,11 +75,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-- Verifica que `aiosqlite` está presente:
-  ```powershell
-  pip show aiosqlite
-  ```
-  Debe mostrar información de versión (p. ej. 0.19.0). Si no aparece, repite el comando de instalación.
+> ℹ️ Si ves la advertencia `WARNING: Package(s) not found: aiosqlite`, puedes continuar. La aplicación elegirá el modo alternativo automáticamente durante la inicialización de la base de datos.
 
 ## 8. Inicializar la base de datos
 
@@ -100,11 +96,11 @@ Accede a `http://localhost:8000/docs` para probar los endpoints.
 
 ## 10. Solución de problemas
 
-- **Sigue apareciendo `ModuleNotFoundError`:**
-  1. Repite el paso 6 para asegurarte de que el entorno 3.11 está activo.
-  2. Ejecuta `python -m pip install aiosqlite` para reinstalar solo ese paquete.
-  3. Ejecuta `pip list | Select-String aiosqlite` y confirma que figura en la lista.
+- **La advertencia sobre `aiosqlite` persiste y deseas instalarlo igualmente:**
+  1. Comprueba que el entorno 3.11 está activo (`python --version`).
+  2. Ejecuta `python -m pip install aiosqlite` para instalarlo manualmente desde PyPI (requiere conexión a Internet).
+  3. Usa `pip list | Select-String aiosqlite` para confirmar que quedó instalado.
 - **`py` no encuentra Python 3.11:** usa la ruta completa, por ejemplo `C:\Program Files\Python311\python.exe -m venv .venv`.
 - **Permisos de ejecución aún bloqueados:** abre una nueva ventana de PowerShell tras aplicar el paso 5 o usa cmd.exe para la activación.
 
-Tras completar estos pasos, `abpm_launcher.py setup` utilizará el driver `sqlite+aiosqlite` correctamente y la base de datos se inicializará sin errores.
+Tras completar estos pasos, `abpm_launcher.py setup` inicializará la base de datos con el controlador disponible (aiosqlite cuando esté instalado o bien el modo alternativo integrado).
