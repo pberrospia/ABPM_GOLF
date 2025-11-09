@@ -55,6 +55,11 @@ async def _initialize_database() -> None:
         )
         raise typer.Exit(code=1)
 
+    # Aseguramos que todos los modelos estén registrados en la metadata antes de crear
+    # las tablas. En algunos entornos los módulos no se importan de forma implícita y
+    # ``Base.metadata`` podría quedar vacío si omitimos esta llamada.
+    import app.models  # noqa: F401  (side effect: registra los modelos en Base.metadata)
+
     settings.storage_dir.mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

@@ -25,6 +25,8 @@ __all__ = [
     "PARSE_DECLTYPES",
     "PARSE_COLNAMES",
     "Binary",
+    "sqlite_version",
+    "sqlite_version_info",
 ]
 
 # Re-export DB-API compatible attributes expected by SQLAlchemy.
@@ -37,6 +39,8 @@ ProgrammingError = sqlite3.ProgrammingError
 PARSE_DECLTYPES = sqlite3.PARSE_DECLTYPES
 PARSE_COLNAMES = sqlite3.PARSE_COLNAMES
 Binary = sqlite3.Binary
+sqlite_version = sqlite3.sqlite_version
+sqlite_version_info = sqlite3.sqlite_version_info
 
 
 class _AsyncCallQueue:
