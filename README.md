@@ -109,6 +109,10 @@ Consulta la guía completa en [`docs/windows-reinstall.md`](docs/windows-reinsta
 
 Si algún paso falla (por ejemplo, PowerShell bloquea la activación), la guía detallada ofrece soluciones específicas.
 
+### Recuperar la base de datos tras el error «no such table: users»
+
+No es necesario borrar todo el repositorio si aparece ese mensaje: basta con recrear la base de datos local. Sigue las indicaciones de [`docs/reset-database.md`](docs/reset-database.md) para comprobar que el entorno virtual usa Python 3.11, eliminar el archivo `abpm.db` si quedó corrupto y ejecutar nuevamente `python abpm_launcher.py setup` antes de crear usuarios.
+
 ### Construir un ejecutable autónomo
 
 1. Instale PyInstaller en el mismo entorno donde instaló las dependencias:
