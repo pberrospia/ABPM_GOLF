@@ -44,7 +44,18 @@ def _run_async(coro):
 
 async def _initialize_database() -> None:
     from app.core.config import settings
-    from app.core.database import Base, engine
+
+    try:
+        from app.core.database import Base, engine
+    except ModuleNotFoundError as exc:  # pragma: no cover - depende del entorno local
+        if exc.name == "aiosqlite":
+            console.print(
+                "[bold red]No se encontró el módulo 'aiosqlite'.[/bold red] "
+                "Instala las dependencias con [bold]pip install -r requirements.txt[/bold] "
+                "y vuelve a ejecutar el comando."
+            )
+            raise typer.Exit(code=1)
+        raise
 
     settings.storage_dir.mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:
