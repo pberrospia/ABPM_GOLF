@@ -76,32 +76,46 @@ def setup() -> None:
 
 async def _create_user(email: str, password: str, full_name: str) -> bool:
     from sqlalchemy import select
+    from sqlalchemy.exc import OperationalError
 
     from app.core.database import async_session_factory
     from app.core.security import get_password_hash
     from app.models import User
 
-    # Garantizamos que la base de datos y las tablas estén listas antes de
-    # intentar consultar o insertar usuarios. Esto cubre entornos donde el
-    # comando ``create-user`` se ejecuta antes de ``setup``.
-    await _initialize_database()
+    # Algunos entornos con SQLite incrustado (por ejemplo, instalaciones
+    # empaquetadas en Windows) pueden eliminar la base de datos entre
+    # ejecuciones. Si la tabla ``users`` desaparece después de la primera
+    # inicialización, la consulta inicial lanzará ``OperationalError`` con el
+    # mensaje "no such table". Reintentamos una vez más forzando la creación
+    # de tablas para cubrir esos casos sin exigir al usuario que repita el
+    # comando manualmente.
+    for attempt in range(2):
+        await _initialize_database()
 
-    async with async_session_factory() as session:
-        result = await session.execute(select(User).where(User.email == email))
-        existing = result.scalar_one_or_none()
-        if existing:
-            return False
+        try:
+            async with async_session_factory() as session:
+                result = await session.execute(select(User).where(User.email == email))
+                existing = result.scalar_one_or_none()
+                if existing:
+                    return False
 
-        user = User(
-            email=email,
-            full_name=full_name,
-            hashed_password=get_password_hash(password),
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
-        )
-        session.add(user)
-        await session.commit()
-        return True
+                user = User(
+                    email=email,
+                    full_name=full_name,
+                    hashed_password=get_password_hash(password),
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
+                )
+                session.add(user)
+                await session.commit()
+                return True
+        except OperationalError as exc:
+            if "no such table" in str(exc).lower() and attempt == 0:
+                continue
+            raise
+
+    # Si llegamos aquí, el segundo intento también falló.
+    raise RuntimeError("No se pudo crear la tabla 'users' tras reintentar la inicialización")
 
 
 @cli.command("create-user")
