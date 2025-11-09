@@ -11,6 +11,7 @@ from app.core.dependencies import CurrentUser
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.models import User
 from app.schemas.auth import Token, UserCreate, UserRead
+from app.utils.files import sanitize_upload_filename
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -54,7 +55,8 @@ async def upload_signature(
     current_user: CurrentUser,
     session: AsyncSession = Depends(get_session),
 ) -> UserRead:
-    filename = f"signature_{current_user.id}_{file.filename}"
+    sanitized_name = sanitize_upload_filename(file.filename, fallback="signature")
+    filename = f"signature_{current_user.id}_{sanitized_name}"
     path = settings.storage_dir / filename
     content = await file.read()
     path.write_bytes(content)

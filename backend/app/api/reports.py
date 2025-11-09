@@ -15,6 +15,7 @@ from app.schemas.auth import ABPMSummary, ReportCreate, ReportRead, ReportUpdate
 from app.services.abpm_analysis import ABPMMetrics, summarize_metrics
 from app.services.pdf_processing import PDFProcessor, locate_patient_metadata
 from app.services.report_generation import ReportComposer
+from app.utils.files import sanitize_upload_filename
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -36,7 +37,10 @@ async def upload_report(
     current_user: CurrentUser = Depends(),
 ) -> ReportRead:
     pdf_bytes = await pdf.read()
-    filename = f"report_{current_user.id}_{int(datetime.utcnow().timestamp())}_{pdf.filename}"
+    sanitized_name = sanitize_upload_filename(pdf.filename, fallback="report.pdf")
+    filename = (
+        f"report_{current_user.id}_{int(datetime.utcnow().timestamp())}_{sanitized_name}"
+    )
     processor = _get_pdf_processor()
     pdf_path = processor.save_upload(pdf_bytes, filename)
 
