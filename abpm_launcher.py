@@ -81,6 +81,11 @@ async def _create_user(email: str, password: str, full_name: str) -> bool:
     from app.core.security import get_password_hash
     from app.models import User
 
+    # Garantizamos que la base de datos y las tablas estén listas antes de
+    # intentar consultar o insertar usuarios. Esto cubre entornos donde el
+    # comando ``create-user`` se ejecuta antes de ``setup``.
+    await _initialize_database()
+
     async with async_session_factory() as session:
         result = await session.execute(select(User).where(User.email == email))
         existing = result.scalar_one_or_none()
