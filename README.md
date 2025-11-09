@@ -96,6 +96,58 @@ pip install -r requirements.txt
 
    Se mostrará en pantalla el resumen de métricas y la clasificación según las guías ESC/ESH 2023.
 
+### Reinstalación limpia en Windows (corrige `ModuleNotFoundError: No module named 'aiosqlite'`)
+
+Si anteriormente creaste el entorno virtual con Python 3.14 o ves el error `ModuleNotFoundError: No module named 'aiosqlite'`,
+sigue estos pasos:
+
+1. **Cerrar y eliminar el entorno anterior** (ejecuta ambos comandos dentro de la carpeta del proyecto):
+   ```powershell
+   deactivate  # ignora este paso si PowerShell indica que el comando no existe
+   Remove-Item -Recurse -Force .venv
+   ```
+
+2. **Verificar que Python 3.11 esté disponible**:
+   ```powershell
+   py -3.11 --version
+   ```
+   Si el comando no encuentra Python 3.11, descárgalo e instálalo desde [python.org](https://www.python.org/downloads/release/python-3110/).
+
+3. **Crear un nuevo entorno virtual usando Python 3.11**:
+   ```powershell
+   py -3.11 -m venv .venv
+   ```
+
+4. **Activar el entorno**:
+   - PowerShell (si ves un error de ejecución de scripts, ejecuta primero `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`):
+     ```powershell
+     .\.venv\Scripts\Activate.ps1
+     ```
+   - Consola clásica `cmd.exe`:
+     ```cmd
+     .venv\Scripts\activate.bat
+     ```
+
+5. **Actualizar `pip` e instalar los requisitos**:
+   ```powershell
+   python -m pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
+   `aiosqlite`, `email-validator` y el resto de dependencias se instalarán en este paso.
+
+6. **Inicializar la base de datos con el nuevo entorno**:
+   ```powershell
+   python abpm_launcher.py setup
+   ```
+
+7. **Crear el usuario inicial y arrancar el servidor** (idéntico a los pasos 4 y 5 de la guía principal).
+
+8. *(Opcional)* **Confirmar que `aiosqlite` está instalado** si el error persiste:
+   ```powershell
+   pip show aiosqlite
+   ```
+   Si el paquete no aparece, repite el paso 5 para reinstalar los requisitos.
+
 ### Construir un ejecutable autónomo
 
 1. Instale PyInstaller en el mismo entorno donde instaló las dependencias:
