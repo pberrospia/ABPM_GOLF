@@ -114,6 +114,16 @@ Si algún paso falla (por ejemplo, PowerShell bloquea la activación), la guía 
 
 Si al recrear tu entorno desapareció `requirements.txt` (o el alias histórico `requeriments.txt`), consulta [`docs/recover-requirements-file.md`](docs/recover-requirements-file.md). La guía explica cómo comprobar el estado del repositorio, restaurar el archivo desde Git y reinstalar las dependencias para continuar con la configuración.
 
+### Diagnosticar un clon incompleto
+
+Cuando después de clonar solo ves unas cuantas carpetas (por ejemplo `backend/`, `scripts/`, `tests/` y otra carpeta `ABPM_GOLF` dentro), revisa [`docs/troubleshoot-missing-files.md`](docs/troubleshoot-missing-files.md). Allí encontrarás pasos detallados para confirmar que Git está instalado, entrar en la carpeta correcta y volver a clonar si la descarga quedó incompleta. También puedes ejecutar el verificador automático:
+
+```bash
+python scripts/check_clone.py
+```
+
+El script reportará qué archivos faltan y las acciones recomendadas para recuperarlos.
+
 ### Recuperar la base de datos tras el error «no such table: users»
 
 No es necesario borrar todo el repositorio si aparece ese mensaje: basta con recrear la base de datos local. Sigue las indicaciones de [`docs/reset-database.md`](docs/reset-database.md) para comprobar que el entorno virtual usa Python 3.11, eliminar el archivo `abpm.db` si quedó corrupto y ejecutar nuevamente `python abpm_launcher.py setup` antes de crear usuarios.
