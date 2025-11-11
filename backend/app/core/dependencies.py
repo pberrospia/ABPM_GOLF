@@ -1,5 +1,3 @@
-from typing import Annotated
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -15,8 +13,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    token: str = Depends(oauth2_scheme),
+    session: AsyncSession = Depends(get_session),
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -37,6 +35,3 @@ async def get_current_user(
         raise credentials_exception
     return user
 
-
-CurrentUser = Annotated[User, Depends(get_current_user)]
-DBSession = Annotated[AsyncSession, Depends(get_session)]

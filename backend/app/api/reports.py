@@ -4,15 +4,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.dependencies import CurrentUser, DBSession
-from app.models import Report
-from app.schemas.auth import ABPMSummary, ReportCreate, ReportRead, ReportUpdate
-from app.services.abpm_analysis import ABPMMetrics, summarize_metrics
+from app.core.database import get_session
+from app.core.dependencies import get_current_user
+from app.models import Report, User
+from app.schemas.auth import ABPMSummary, ReportRead, ReportUpdate
+from app.services.abpm_analysis import summarize_metrics
 from app.services.pdf_processing import PDFProcessor, locate_patient_metadata
 from app.services.report_generation import ReportComposer
 from app.utils.files import sanitize_upload_filename
@@ -33,8 +34,8 @@ async def upload_report(
     pdf: UploadFile = File(...),
     patient_name: str = Form(None),
     exam_date: str = Form(None),
-    session: DBSession,
-    current_user: CurrentUser,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> ReportRead:
     pdf_bytes = await pdf.read()
     sanitized_name = sanitize_upload_filename(pdf.filename, fallback="report.pdf")
@@ -70,14 +71,21 @@ async def upload_report(
 
 
 @router.get("/", response_model=List[ReportRead])
-async def list_reports(session: DBSession, current_user: CurrentUser) -> List[ReportRead]:
+async def list_reports(
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> List[ReportRead]:
     result = await session.execute(select(Report).where(Report.owner_id == current_user.id).order_by(Report.created_at.desc()))
     reports = result.scalars().all()
     return [ReportRead.model_validate(report) for report in reports]
 
 
 @router.get("/{report_id}", response_model=ReportRead)
-async def get_report(report_id: int, session: DBSession, current_user: CurrentUser) -> ReportRead:
+async def get_report(
+    report_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> ReportRead:
     report = await _get_owned_report(report_id, session, current_user)
     return ReportRead.model_validate(report)
 
@@ -86,8 +94,8 @@ async def get_report(report_id: int, session: DBSession, current_user: CurrentUs
 async def update_report(
     report_id: int,
     payload: ReportUpdate,
-    session: DBSession,
-    current_user: CurrentUser,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> ReportRead:
     report = await _get_owned_report(report_id, session, current_user)
     for field, value in payload.model_dump(exclude_unset=True).items():
@@ -104,8 +112,8 @@ async def finalize_report(
     report_id: int,
     conclusions: str = Form(""),
     recommendations: str = Form(""),
-    session: DBSession,
-    current_user: CurrentUser,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> ReportRead:
     report = await _get_owned_report(report_id, session, current_user)
     if not report.analysis:
@@ -143,7 +151,11 @@ async def finalize_report(
     return ReportRead.model_validate(report)
 
 
-async def _get_owned_report(report_id: int, session: AsyncSession, current_user: CurrentUser) -> Report:
+async def _get_owned_report(
+    report_id: int,
+    session: AsyncSession,
+    current_user: User,
+) -> Report:
     result = await session.execute(select(Report).where(Report.id == report_id, Report.owner_id == current_user.id))
     report = result.scalar_one_or_none()
     if not report:
