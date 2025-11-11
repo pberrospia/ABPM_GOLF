@@ -3,11 +3,9 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.database import get_session
-from app.core.dependencies import CurrentUser
+from app.core.dependencies import CurrentUser, DBSession
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.models import User
 from app.schemas.auth import Token, UserCreate, UserRead
@@ -17,7 +15,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def register_user(user_in: UserCreate, session: AsyncSession = Depends(get_session)) -> UserRead:
+async def register_user(user_in: UserCreate, session: DBSession) -> UserRead:
     result = await session.execute(select(User).where(User.email == user_in.email))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="El correo ya está registrado")
@@ -38,7 +36,7 @@ async def register_user(user_in: UserCreate, session: AsyncSession = Depends(get
 @router.post("/login", response_model=Token)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    session: AsyncSession = Depends(get_session),
+    session: DBSession,
 ) -> Token:
     result = await session.execute(select(User).where(User.email == form_data.username))
     user = result.scalar_one_or_none()
@@ -53,7 +51,7 @@ async def login(
 async def upload_signature(
     file: UploadFile,
     current_user: CurrentUser,
-    session: AsyncSession = Depends(get_session),
+    session: DBSession,
 ) -> UserRead:
     sanitized_name = sanitize_upload_filename(file.filename, fallback="signature")
     filename = f"signature_{current_user.id}_{sanitized_name}"
