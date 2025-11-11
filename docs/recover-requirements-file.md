@@ -14,7 +14,19 @@ cd C:\Users\TU_USUARIO\OneDrive\Documentos\GitHub\ABPM_GOLF
 
 Sustituye la ruta según la ubicación real del repositorio. Confirma con `dir` (cmd) o `Get-ChildItem` (PowerShell) que ves archivos como `abpm_launcher.py` y la carpeta `backend/`.
 
-## 2. Revisa el estado del repositorio
+## 2. Verifica que Git esté disponible
+
+Antes de ejecutar cualquier comando `git`, asegúrate de que la herramienta está instalada y presente en tu `PATH`:
+
+```powershell
+git --version
+```
+
+- Si ves un número de versión (por ejemplo, `git version 2.47.0.windows.1`), continúa con el siguiente paso.
+- Si aparece el error `The term 'git' is not recognized`, instala Git para Windows desde [git-scm.com](https://git-scm.com/download/win) y acepta la opción que agrega Git al `PATH`. Tras la instalación, abre una terminal nueva y repite el comando anterior.
+- Si prefieres no instalar Git, puedes descargar el ZIP del repositorio desde GitHub, pero las instrucciones siguientes asumen que ya cuentas con la herramienta.
+
+## 3. Revisa el estado del repositorio
 
 ```powershell
 git status
@@ -23,7 +35,7 @@ git status
 - Si `requirements.txt` aparece como `deleted`, continúa con el siguiente paso.
 - Si Git indica “nothing to commit”, es posible que el archivo exista y solo debas volver a instalar dependencias (`pip install -r requirements.txt`). Usa `type requirements.txt` (cmd) o `Get-Content requirements.txt` (PowerShell) para comprobar su contenido.
 
-## 3. Restaura el archivo desde Git
+## 4. Restaura el archivo desde Git
 
 - Para recuperar la versión que tienes en tu rama local:
 
@@ -40,7 +52,7 @@ git status
 
 Ambos comandos descargan la lista oficial de dependencias del repositorio junto con el alias `requeriments.txt` que redirige a la misma información.
 
-## 4. Reinstala las dependencias
+## 5. Reinstala las dependencias
 
 Con tu entorno virtual de Python 3.11 activo:
 
@@ -51,7 +63,7 @@ pip install -r requirements.txt
 
 La instalación volverá a incluir componentes como FastAPI, SQLAlchemy, Pillow y `email-validator`. Si `pip` muestra la advertencia `Package(s) not found: aiosqlite`, puedes continuar: el proyecto incluye un módulo compatible en `backend/aiosqlite`.
 
-## 5. Continúa con la configuración habitual
+## 6. Continúa con la configuración habitual
 
 Ejecuta nuevamente los comandos del asistente según lo necesites:
 

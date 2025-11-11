@@ -14,6 +14,7 @@ Aplicativo backend para analizar estudios de monitoreo ambulatorio de presión a
 ## Requisitos
 
 - Python 3.11+
+- Git 2.30+ (para clonar el repositorio y ejecutar los comandos de restauración; si no lo tienes, instala [Git para Windows](https://git-scm.com/download/win) o usa la descarga en ZIP).
 - Tesseract OCR instalado en el sistema para procesar PDFs escaneados.
 
 Instale dependencias:
