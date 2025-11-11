@@ -109,6 +109,10 @@ Consulta la guía completa en [`docs/windows-reinstall.md`](docs/windows-reinsta
 
 Si algún paso falla (por ejemplo, PowerShell bloquea la activación), la guía detallada ofrece soluciones específicas.
 
+### Restaurar `requirements.txt` tras reinstalar el entorno
+
+Si al recrear tu entorno desapareció `requirements.txt` (o el alias histórico `requeriments.txt`), consulta [`docs/recover-requirements-file.md`](docs/recover-requirements-file.md). La guía explica cómo comprobar el estado del repositorio, restaurar el archivo desde Git y reinstalar las dependencias para continuar con la configuración.
+
 ### Recuperar la base de datos tras el error «no such table: users»
 
 No es necesario borrar todo el repositorio si aparece ese mensaje: basta con recrear la base de datos local. Sigue las indicaciones de [`docs/reset-database.md`](docs/reset-database.md) para comprobar que el entorno virtual usa Python 3.11, eliminar el archivo `abpm.db` si quedó corrupto y ejecutar nuevamente `python abpm_launcher.py setup` antes de crear usuarios.
