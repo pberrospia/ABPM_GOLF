@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,8 +33,8 @@ async def upload_report(
     pdf: UploadFile = File(...),
     patient_name: str = Form(None),
     exam_date: str = Form(None),
-    session: DBSession = Depends(),
-    current_user: CurrentUser = Depends(),
+    session: DBSession,
+    current_user: CurrentUser,
 ) -> ReportRead:
     pdf_bytes = await pdf.read()
     sanitized_name = sanitize_upload_filename(pdf.filename, fallback="report.pdf")
@@ -70,14 +70,14 @@ async def upload_report(
 
 
 @router.get("/", response_model=List[ReportRead])
-async def list_reports(session: DBSession = Depends(), current_user: CurrentUser = Depends()) -> List[ReportRead]:
+async def list_reports(session: DBSession, current_user: CurrentUser) -> List[ReportRead]:
     result = await session.execute(select(Report).where(Report.owner_id == current_user.id).order_by(Report.created_at.desc()))
     reports = result.scalars().all()
     return [ReportRead.model_validate(report) for report in reports]
 
 
 @router.get("/{report_id}", response_model=ReportRead)
-async def get_report(report_id: int, session: DBSession = Depends(), current_user: CurrentUser = Depends()) -> ReportRead:
+async def get_report(report_id: int, session: DBSession, current_user: CurrentUser) -> ReportRead:
     report = await _get_owned_report(report_id, session, current_user)
     return ReportRead.model_validate(report)
 
@@ -86,8 +86,8 @@ async def get_report(report_id: int, session: DBSession = Depends(), current_use
 async def update_report(
     report_id: int,
     payload: ReportUpdate,
-    session: DBSession = Depends(),
-    current_user: CurrentUser = Depends(),
+    session: DBSession,
+    current_user: CurrentUser,
 ) -> ReportRead:
     report = await _get_owned_report(report_id, session, current_user)
     for field, value in payload.model_dump(exclude_unset=True).items():
@@ -104,8 +104,8 @@ async def finalize_report(
     report_id: int,
     conclusions: str = Form(""),
     recommendations: str = Form(""),
-    session: DBSession = Depends(),
-    current_user: CurrentUser = Depends(),
+    session: DBSession,
+    current_user: CurrentUser,
 ) -> ReportRead:
     report = await _get_owned_report(report_id, session, current_user)
     if not report.analysis:
