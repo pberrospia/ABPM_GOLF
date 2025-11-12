@@ -5,6 +5,9 @@ ilustra cómo estructurar dependencias de FastAPI compatibles con Pydantic v2.
 
 ## Puesta en marcha
 
+Sigue la guía detallada en [`docs/server_setup_steps.md`](docs/server_setup_steps.md)
+para obtener un paso a paso completo. En resumen:
+
 1. Instala las dependencias principales:
    ```bash
    pip install fastapi uvicorn typer rich sqlalchemy pydantic pydantic-settings
