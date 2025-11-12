@@ -54,7 +54,7 @@ FastAPI permite dos sintaxis equivalentes. Quédate solo con una de ellas:
 
 ## 5. Ejemplo aplicado en este repositorio
 
-El endpoint `/reports/upload` ya utiliza la sintaxis corregida (Opción A):
+El endpoint `/reports/upload` ya utiliza la sintaxis corregida (Opción B):
 
 ```python
 from typing import Annotated
@@ -67,14 +67,11 @@ from app.core.database import get_session
 from app.models.user import User
 from app.schemas.auth import ReportRead
 
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
-CurrentUserDep = Annotated[User, Depends(get_current_user)]
-
 
 @router.post("/upload", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
 async def upload_report(
-    session: SessionDep,
-    current_user: CurrentUserDep,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
     pdf: UploadFile = File(...),
     patient_name: Annotated[str | None, Form(None)] = None,
     exam_date: Annotated[str | None, Form(None)] = None,

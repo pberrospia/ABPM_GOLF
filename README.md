@@ -18,8 +18,8 @@ para obtener un paso a paso completo. En resumen:
    ```
 3. Visita `http://127.0.0.1:8000/docs` para explorar la API interactiva.
 
-El endpoint `/reports/upload` ahora declara las dependencias usando la
-convención moderna `Annotated[Tipo, Depends(...)]`, evitando el `AssertionError`
+El endpoint `/reports/upload` ahora declara las dependencias con la sintaxis
+tradicional `param: Tipo = Depends(...)`, evitando el `AssertionError`
 observado originalmente.
 
 ## ¿Problemas con `git pull`?

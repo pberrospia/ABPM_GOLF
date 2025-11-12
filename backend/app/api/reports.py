@@ -9,15 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.database import get_session
+from app.models.user import User
 from app.schemas.auth import ABPMMetrics, ReportCreate, ReportRead
 from app.services.abpm_analysis import locate_patient_metadata
 from app.services.pdf_processing import PDFProcessor
 from app.services.report_generation import ReportComposer
 from app.utils.files import sanitize_upload_filename
-from app.models.user import User
-
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
-CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -32,8 +29,8 @@ def _get_report_composer() -> ReportComposer:
 
 @router.post("/upload", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
 async def upload_report(
-    session: SessionDep,
-    current_user: CurrentUserDep,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
     pdf: UploadFile = File(...),
     patient_name: Annotated[str | None, Form(None)] = None,
     exam_date: Annotated[str | None, Form(None)] = None,
