@@ -18,3 +18,24 @@ ilustra cómo estructurar dependencias de FastAPI compatibles con Pydantic v2.
 El endpoint `/reports/upload` ahora declara las dependencias usando la
 convención moderna `Annotated[Tipo, Depends(...)]`, evitando el `AssertionError`
 observado originalmente.
+
+## ¿Problemas con `git pull`?
+
+Si ves el error `fatal: not a git repository (or any of the parent directories): .git`,
+sigue estos pasos:
+
+1. **Confirma tu ubicación.** Ejecuta `pwd` (en macOS/Linux) o `cd` (en Windows)
+   y verifica que estés dentro de la carpeta clonada `ABPM_GOLF`.
+2. **Comprueba la presencia de la carpeta `.git`.** Ejecuta `ls -a` (o
+   `dir /a` en Windows). Si no aparece `.git`, significa que el repositorio no se
+   clonó correctamente.
+3. **Si falta `.git`, vuelve a clonar el repositorio** con
+   `git clone <URL_DEL_REPOSITORIO>` y entra en la carpeta recién creada antes de
+   ejecutar `git pull`.
+4. **Si `.git` existe pero el error persiste**, ejecuta `git status` para
+   confirmar que Git reconoce el repositorio. Si el comando falla, puede que la
+   carpeta `.git` esté dañada; en ese caso, guarda tus cambios y vuelve a clonar
+   el repositorio desde cero.
+
+Consulta `docs/troubleshooting_git_repository.md` para capturas de comandos y
+detalles adicionales.
