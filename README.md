@@ -41,4 +41,6 @@ sigue estos pasos:
    el repositorio desde cero.
 
 Consulta `docs/troubleshooting_git_repository.md` para capturas de comandos y
-detalles adicionales.
+detalles adicionales. Para un instructivo único que combine la solución del
+`AssertionError` y del error de Git, visita
+[`docs/manual_fix_steps.md`](docs/manual_fix_steps.md).
