@@ -20,7 +20,7 @@ El problema aparece al usar Pydantic v2/FastAPI recientes, que no permiten mezcl
 
 FastAPI permite dos sintaxis equivalentes. Quédate solo con una de ellas:
 
-- **Opción A (recomendada para Pydantic v2)** – usar únicamente `Annotated`:
+- **Opción A** – usar únicamente `Annotated`:
   ```python
   from typing import Annotated
 
@@ -40,8 +40,8 @@ FastAPI permite dos sintaxis equivalentes. Quédate solo con una de ellas:
 1. Borra el `= Depends(get_session)` cuando utilices `Annotated` (Opción A).
 2. Repite el mismo ajuste para cualquier otro parámetro parecido, por ejemplo:
    ```python
- current_user: Annotated[User, Depends(get_current_user)]
-  ```
+   current_user: Annotated[User, Depends(get_current_user)]
+   ```
 3. Guarda el archivo.
 
 ## 4. Verificar
@@ -51,14 +51,22 @@ FastAPI permite dos sintaxis equivalentes. Quédate solo con una de ellas:
 
 ## 5. Ejemplo aplicado en este repositorio
 
-El endpoint `/reports/upload` ya utiliza la sintaxis corregida:
+El endpoint `/reports/upload` ya utiliza la sintaxis corregida (Opción B):
 
 ```python
+from fastapi import Depends, File, UploadFile
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user
+from app.core.database import get_session
+from app.schemas.auth import ReportRead
+from app.models.user import User
+
 @router.post("/upload", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
 async def upload_report(
-    pdf: Annotated[UploadFile, File(...)],
-    session: Annotated[AsyncSession, Depends(get_session)],
-    current_user: CurrentUser,
+    pdf: UploadFile = File(...),
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
     patient_name: Annotated[str | None, Form(None)] = None,
     exam_date: Annotated[str | None, Form(None)] = None,
 ) -> ReportRead:

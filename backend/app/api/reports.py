@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import CurrentUser
+from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.database import get_session
 from app.schemas.auth import ABPMMetrics, ReportCreate, ReportRead
@@ -14,6 +14,7 @@ from app.services.abpm_analysis import locate_patient_metadata
 from app.services.pdf_processing import PDFProcessor
 from app.services.report_generation import ReportComposer
 from app.utils.files import sanitize_upload_filename
+from app.models.user import User
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -28,17 +29,17 @@ def _get_report_composer() -> ReportComposer:
 
 @router.post("/upload", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
 async def upload_report(
-    pdf: Annotated[UploadFile, File(...)],
-    session: Annotated[AsyncSession, Depends(get_session)],
-    current_user: CurrentUser,
+    pdf: UploadFile = File(...),
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
     patient_name: Annotated[str | None, Form(None)] = None,
     exam_date: Annotated[str | None, Form(None)] = None,
 ) -> ReportRead:
     """Persist an uploaded ABPM report.
 
-    The key detail is the signature of ``session`` and ``current_user``: both use
-    ``Annotated[..., Depends(...)]`` without also specifying ``= Depends(...)`` as
-    a default value. This avoids the FastAPI assertion raised with Pydantic v2.
+    The key detail is the signature of ``session`` and ``current_user``: both rely
+    on the classic ``param: Type = Depends(...)`` pattern, which is compatible
+    with Pydantic v2 and avoids the FastAPI assertion raised previously.
     """
 
     _ = session  # Session would be used for persistence in a full implementation.

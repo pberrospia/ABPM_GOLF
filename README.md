@@ -15,6 +15,6 @@ ilustra cómo estructurar dependencias de FastAPI compatibles con Pydantic v2.
    ```
 3. Visita `http://127.0.0.1:8000/docs` para explorar la API interactiva.
 
-El endpoint `/reports/upload` ahora declara las dependencias mediante
-`typing.Annotated` sin valores por defecto `Depends(...)`, evitando el
-`AssertionError` observado originalmente.
+El endpoint `/reports/upload` ahora declara las dependencias usando la
+convención clásica `param: Tipo = Depends(...)`, evitando el `AssertionError`
+observado originalmente.
