@@ -16,6 +16,9 @@ from app.services.report_generation import ReportComposer
 from app.utils.files import sanitize_upload_filename
 from app.models.user import User
 
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
+
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
@@ -29,17 +32,17 @@ def _get_report_composer() -> ReportComposer:
 
 @router.post("/upload", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
 async def upload_report(
+    session: SessionDep,
+    current_user: CurrentUserDep,
     pdf: UploadFile = File(...),
-    session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user),
     patient_name: Annotated[str | None, Form(None)] = None,
     exam_date: Annotated[str | None, Form(None)] = None,
 ) -> ReportRead:
     """Persist an uploaded ABPM report.
 
     The key detail is the signature of ``session`` and ``current_user``: both rely
-    on the classic ``param: Type = Depends(...)`` pattern, which is compatible
-    with Pydantic v2 and avoids the FastAPI assertion raised previously.
+    on the ``Annotated[..., Depends(...)]`` pattern, which is compatible with
+    Pydantic v2 and avoids the FastAPI assertion raised previously.
     """
 
     _ = session  # Session would be used for persistence in a full implementation.

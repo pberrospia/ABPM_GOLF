@@ -42,7 +42,10 @@ FastAPI permite dos sintaxis equivalentes. Quédate solo con una de ellas:
    ```python
    current_user: Annotated[User, Depends(get_current_user)]
    ```
-3. Guarda el archivo.
+3. Asegúrate de que los parámetros sin valor por defecto (como `session` y
+   `current_user`) aparezcan antes que los que sí lo tienen (`pdf`, `patient_name`,
+   etc.), ya que Python exige ese orden.
+4. Guarda el archivo.
 
 ## 4. Verificar
 
@@ -51,22 +54,28 @@ FastAPI permite dos sintaxis equivalentes. Quédate solo con una de ellas:
 
 ## 5. Ejemplo aplicado en este repositorio
 
-El endpoint `/reports/upload` ya utiliza la sintaxis corregida (Opción B):
+El endpoint `/reports/upload` ya utiliza la sintaxis corregida (Opción A):
 
 ```python
-from fastapi import Depends, File, UploadFile
+from typing import Annotated
+
+from fastapi import Depends, File, Form, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.database import get_session
-from app.schemas.auth import ReportRead
 from app.models.user import User
+from app.schemas.auth import ReportRead
+
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
+
 
 @router.post("/upload", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
 async def upload_report(
+    session: SessionDep,
+    current_user: CurrentUserDep,
     pdf: UploadFile = File(...),
-    session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user),
     patient_name: Annotated[str | None, Form(None)] = None,
     exam_date: Annotated[str | None, Form(None)] = None,
 ) -> ReportRead:
