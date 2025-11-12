@@ -32,11 +32,11 @@ Sigue cada bloque en orden para que ambos inconvenientes desaparezcan.
    from app.api.deps import get_current_user
 
    async def upload_report(
-       session: AsyncSession = Depends(get_session),
-       current_user: User = Depends(get_current_user),
        pdf: UploadFile = File(...),
        patient_name: Annotated[str | None, Form(None)] = None,
        exam_date: Annotated[str | None, Form(None)] = None,
+       session: AsyncSession = Depends(get_session),
+       current_user: User = Depends(get_current_user),
    ) -> ReportRead:
        ...
    ```

@@ -42,10 +42,7 @@ FastAPI permite dos sintaxis equivalentes. Quédate solo con una de ellas:
    ```python
    current_user: Annotated[User, Depends(get_current_user)]
    ```
-3. Asegúrate de que los parámetros sin valor por defecto (como `session` y
-   `current_user`) aparezcan antes que los que sí lo tienen (`pdf`, `patient_name`,
-   etc.), ya que Python exige ese orden.
-4. Guarda el archivo.
+3. Guarda el archivo.
 
 ## 4. Verificar
 
@@ -70,11 +67,11 @@ from app.schemas.auth import ReportRead
 
 @router.post("/upload", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
 async def upload_report(
-    session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user),
     pdf: UploadFile = File(...),
     patient_name: Annotated[str | None, Form(None)] = None,
     exam_date: Annotated[str | None, Form(None)] = None,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> ReportRead:
     ...
 ```

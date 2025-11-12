@@ -1,12 +1,8 @@
 from __future__ import annotations
 
-from typing import Annotated
-
-from fastapi import Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException, status
 
 from app.models.user import User
-from app.core.database import get_session
 
 
 async def get_current_user() -> User:
@@ -22,5 +18,4 @@ async def get_current_user() -> User:
     return user
 
 
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
-CurrentUserDep = Annotated[User, Depends(get_current_user)]
+__all__ = ["get_current_user"]

@@ -3,10 +3,13 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import CurrentUserDep, SessionDep
+from app.api.deps import get_current_user
 from app.core.config import settings
+from app.core.database import get_session
+from app.models.user import User
 from app.schemas.auth import ABPMMetrics, ReportCreate, ReportRead
 from app.services.abpm_analysis import locate_patient_metadata
 from app.services.pdf_processing import PDFProcessor
@@ -26,17 +29,17 @@ def _get_report_composer() -> ReportComposer:
 
 @router.post("/upload", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
 async def upload_report(
-    session: SessionDep,
-    current_user: CurrentUserDep,
     pdf: UploadFile = File(...),
     patient_name: Annotated[str | None, Form(None)] = None,
     exam_date: Annotated[str | None, Form(None)] = None,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> ReportRead:
     """Persist an uploaded ABPM report.
 
-    The key detail is the signature of ``session`` and ``current_user``: both rely
-    on the ``Annotated[..., Depends(...)]`` pattern, which is compatible with
-    Pydantic v2 and avoids the FastAPI assertion raised previously.
+    The key detail is that ``session`` and ``current_user`` now rely on the
+    traditional ``Depends`` default pattern, which is compatible with Pydantic v2
+    and avoids the FastAPI assertion raised previously.
     """
 
     _ = session  # Session would be used for persistence in a full implementation.
