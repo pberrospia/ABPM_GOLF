@@ -23,20 +23,25 @@ Sigue cada bloque en orden para que ambos inconvenientes desaparezcan.
    session: Annotated[AsyncSession, Depends(get_session)] = Depends(get_session)
    current_user: Annotated[User, Depends(get_current_user)] = Depends(get_current_user)
    ```
-   Sustitúyelos por la versión compatible con Pydantic v2:
+   Sustitúyelos por la versión compatible con Pydantic v2 basada en alias:
    ```python
+   from typing import Annotated
+
    from fastapi import Depends
    from sqlalchemy.ext.asyncio import AsyncSession
    from app.models.user import User
    from app.core.database import get_session
    from app.api.deps import get_current_user
 
+   SessionDep = Annotated[AsyncSession, Depends(get_session)]
+   CurrentUserDep = Annotated[User, Depends(get_current_user)]
+
    async def upload_report(
+       session: SessionDep,
+       current_user: CurrentUserDep,
        pdf: UploadFile = File(...),
-       patient_name: Annotated[str | None, Form(None)] = None,
-       exam_date: Annotated[str | None, Form(None)] = None,
-       session: AsyncSession = Depends(get_session),
-       current_user: User = Depends(get_current_user),
+       patient_name: str | None = Form(None),
+       exam_date: str | None = Form(None),
    ) -> ReportRead:
        ...
    ```

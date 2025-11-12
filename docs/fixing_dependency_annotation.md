@@ -20,13 +20,13 @@ El problema aparece al usar Pydantic v2/FastAPI recientes, que no permiten mezcl
 
 FastAPI permite dos sintaxis equivalentes. Quédate solo con una de ellas:
 
-- **Opción A** – usar únicamente `Annotated`:
+- **Opción A** – crear un alias `Annotated` reutilizable **sin** valor por defecto:
   ```python
   from typing import Annotated
 
   from fastapi import Depends
 
-  session: Annotated[AsyncSession, Depends(get_session)]
+  SessionDep = Annotated[AsyncSession, Depends(get_session)]
   ```
 - **Opción B** – usar únicamente el valor por defecto:
   ```python
@@ -37,12 +37,17 @@ FastAPI permite dos sintaxis equivalentes. Quédate solo con una de ellas:
 
 ## 3. Aplicar el cambio
 
-1. Borra el `= Depends(get_session)` cuando utilices `Annotated` (Opción A).
+1. Borra el `= Depends(get_session)` cuando utilices `Annotated` (Opción A) y conviértelo en un alias importable.
 2. Repite el mismo ajuste para cualquier otro parámetro parecido, por ejemplo:
    ```python
-   current_user: Annotated[User, Depends(get_current_user)]
+   CurrentUserDep = Annotated[User, Depends(get_current_user)]
    ```
-3. Guarda el archivo.
+3. Actualiza la firma de la función para usar los alias sin valores por defecto:
+   ```python
+   async def upload_report(session: SessionDep, current_user: CurrentUserDep, ...):
+       ...
+   ```
+4. Guarda el archivo.
 
 ## 4. Verificar
 
@@ -51,27 +56,21 @@ FastAPI permite dos sintaxis equivalentes. Quédate solo con una de ellas:
 
 ## 5. Ejemplo aplicado en este repositorio
 
-El endpoint `/reports/upload` ya utiliza la sintaxis corregida (Opción B):
+El endpoint `/reports/upload` ya utiliza la sintaxis corregida (Opción A):
 
 ```python
-from typing import Annotated
+from fastapi import File, Form, UploadFile
 
-from fastapi import Depends, File, Form, UploadFile
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.api.deps import get_current_user
-from app.core.database import get_session
-from app.models.user import User
-from app.schemas.auth import ReportRead
+from app.api.deps import CurrentUserDep, SessionDep
 
 
 @router.post("/upload", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
 async def upload_report(
+    session: SessionDep,
+    current_user: CurrentUserDep,
     pdf: UploadFile = File(...),
-    patient_name: Annotated[str | None, Form(None)] = None,
-    exam_date: Annotated[str | None, Form(None)] = None,
-    session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user),
+    patient_name: str | None = Form(None),
+    exam_date: str | None = Form(None),
 ) -> ReportRead:
     ...
 ```

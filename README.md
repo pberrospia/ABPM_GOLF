@@ -18,8 +18,9 @@ para obtener un paso a paso completo. En resumen:
    ```
 3. Visita `http://127.0.0.1:8000/docs` para explorar la API interactiva.
 
-El endpoint `/reports/upload` ahora declara las dependencias con la sintaxis
-tradicional `param: Tipo = Depends(...)`, evitando el `AssertionError`
+El endpoint `/reports/upload` ahora emplea alias basados en `typing.Annotated`
+sin valores por defecto (por ejemplo, `SessionDep` y `CurrentUserDep`). De esta
+forma FastAPI inyecta las dependencias sin disparar el `AssertionError`
 observado originalmente.
 
 ## ¿Problemas con `git pull`?
