@@ -1,0 +1,11 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass
+class User:
+    id: int
+    email: str
+    full_name: str
+    signature_path: str | None = None
