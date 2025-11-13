@@ -1,13 +1,19 @@
 from __future__ import annotations
 
 from datetime import datetime
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from pathlib import Path
+from typing import List
 
-from app.api.deps import CurrentUserDep, SessionDep
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
-from app.schemas.auth import ABPMMetrics, ReportCreate, ReportRead
-from app.services.abpm_analysis import locate_patient_metadata
-from app.services.pdf_processing import PDFProcessor
+from app.core.dependencies import CurrentUser, DBSession
+from app.models import Report
+from app.schemas.auth import ABPMSummary, ReportRead, ReportUpdate
+from app.services.abpm_analysis import summarize_metrics
+from app.services.pdf_processing import PDFProcessor, locate_patient_metadata
 from app.services.report_generation import ReportComposer
 from app.utils.files import sanitize_upload_filename
 
@@ -24,42 +30,135 @@ def _get_report_composer() -> ReportComposer:
 
 @router.post("/upload", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
 async def upload_report(
-    session: SessionDep,
-    current_user: CurrentUserDep,
+    session: DBSession,
+    current_user: CurrentUser,
     pdf: UploadFile = File(...),
-    patient_name: str | None = Form(None),
-    exam_date: str | None = Form(None),
+    patient_name: str = Form(None),
+    exam_date: str = Form(None),
 ) -> ReportRead:
-    """Persist an uploaded ABPM report.
-
-    The key detail is that ``session`` and ``current_user`` now rely on
-    ``typing.Annotated`` dependency aliases without extra defaults, which keeps
-    FastAPI's dependency analysis compatible with Pydantic v2.
-    """
-
-    _ = session  # Session would be used for persistence in a full implementation.
-    filename = sanitize_upload_filename(pdf.filename or "abpm_report.pdf")
     pdf_bytes = await pdf.read()
+    sanitized_name = sanitize_upload_filename(pdf.filename, fallback="report.pdf")
+    filename = (
+        f"report_{current_user.id}_{int(datetime.utcnow().timestamp())}_{sanitized_name}"
+    )
+    processor = _get_pdf_processor()
+    pdf_path = processor.save_upload(pdf_bytes, filename)
 
-    if not pdf_bytes:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El PDF está vacío")
+    extracted_text = processor.extract_text(pdf_path)
+    metrics = processor.parse_metrics(extracted_text)
+    summary = summarize_metrics(metrics)
+
+    patient, date_str = locate_patient_metadata(extracted_text)
+    patient_name = patient_name or patient or "Paciente sin identificar"
+    parsed_exam_date = _parse_exam_date(exam_date or date_str) or datetime.utcnow().date()
+
+    report = Report(
+        owner_id=current_user.id,
+        patient_name=patient_name,
+        exam_date=parsed_exam_date,
+        raw_text=extracted_text,
+        raw_metrics=metrics.as_dict(),
+        analysis=summary.model_dump(),
+        source_pdf_path=str(pdf_path),
+        status="draft",
+    )
+    session.add(report)
+    await session.commit()
+    await session.refresh(report)
+
+    return ReportRead.model_validate(report)
+
+
+@router.get("/", response_model=List[ReportRead])
+async def list_reports(session: DBSession, current_user: CurrentUser) -> List[ReportRead]:
+    result = await session.execute(select(Report).where(Report.owner_id == current_user.id).order_by(Report.created_at.desc()))
+    reports = result.scalars().all()
+    return [ReportRead.model_validate(report) for report in reports]
+
+
+@router.get("/{report_id}", response_model=ReportRead)
+async def get_report(report_id: int, session: DBSession, current_user: CurrentUser) -> ReportRead:
+    report = await _get_owned_report(report_id, session, current_user)
+    return ReportRead.model_validate(report)
+
+
+@router.put("/{report_id}", response_model=ReportRead)
+async def update_report(
+    report_id: int,
+    payload: ReportUpdate,
+    session: DBSession,
+    current_user: CurrentUser,
+) -> ReportRead:
+    report = await _get_owned_report(report_id, session, current_user)
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(report, field, value)
+    report.updated_at = datetime.utcnow()
+    session.add(report)
+    await session.commit()
+    await session.refresh(report)
+    return ReportRead.model_validate(report)
+
+
+@router.post("/{report_id}/finalize", response_model=ReportRead)
+async def finalize_report(
+    report_id: int,
+    session: DBSession,
+    current_user: CurrentUser,
+    conclusions: str = Form(""),
+    recommendations: str = Form(""),
+) -> ReportRead:
+    report = await _get_owned_report(report_id, session, current_user)
+    if not report.analysis:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El informe no tiene análisis disponible")
+
+    summary = ABPMSummary.model_validate(report.analysis)
 
     composer = _get_report_composer()
-    processor = _get_pdf_processor()
+    signature_path = None
+    if current_user.signature_path:
+        signature_path = settings.storage_dir / Path(current_user.signature_path).name
+        if not signature_path.exists():
+            signature_path = Path(current_user.signature_path)
 
-    await processor.save_upload(filename, pdf_bytes)
-
-    exam_dt = datetime.fromisoformat(exam_date) if exam_date else None
-    payload = ReportCreate(filename=filename, patient_name=patient_name, exam_date=exam_dt)
-    report = await composer.create_report(owner=current_user, payload=payload, pdf_bytes=pdf_bytes)
-
-    patient_name_meta, exam_date_meta = locate_patient_metadata(report.storage_path)
-    metrics = ABPMMetrics(systolic_values=[120, 122, 118], diastolic_values=[80, 78, 82])
-    return ReportRead(
-        id=report.id,
-        owner_id=report.owner_id,
-        filename=report.filename,
-        patient_name=patient_name_meta or report.patient_name,
-        exam_date=exam_date_meta or report.exam_date,
-        storage_path=report.storage_path,
+    finalized_pdf = composer.build_summary_pdf(
+        source_pdf=Path(report.source_pdf_path),
+        summary=summary,
+        conclusions=conclusions,
+        recommendations=recommendations,
+        patient_name=report.patient_name,
+        exam_date=datetime.combine(report.exam_date, datetime.min.time()),
+        clinician_name=current_user.full_name,
+        signature_path=signature_path,
     )
+
+    report.conclusions = conclusions
+    report.recommendations = recommendations
+    report.finalized_pdf_path = str(finalized_pdf)
+    report.status = "finalizado"
+    report.updated_at = datetime.utcnow()
+
+    session.add(report)
+    await session.commit()
+    await session.refresh(report)
+    return ReportRead.model_validate(report)
+
+
+async def _get_owned_report(report_id: int, session: AsyncSession, current_user: CurrentUser) -> Report:
+    result = await session.execute(select(Report).where(Report.id == report_id, Report.owner_id == current_user.id))
+    report = result.scalar_one_or_none()
+    if not report:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Informe no encontrado")
+    return report
+
+
+def _parse_exam_date(value: str | None):
+    if not value:
+        return None
+
+    value = value.strip()
+    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%Y/%m/%d"):
+        try:
+            return datetime.strptime(value, fmt).date()
+        except ValueError:
+            continue
+    return None

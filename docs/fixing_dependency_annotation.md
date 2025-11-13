@@ -20,7 +20,7 @@ El problema aparece al usar Pydantic v2/FastAPI recientes, que no permiten mezcl
 
 FastAPI permite dos sintaxis equivalentes. Quédate solo con una de ellas:
 
-- **Opción A** – crear un alias `Annotated` reutilizable **sin** valor por defecto:
+- **Opción A** – crear un alias `Annotated` reutilizable **sin** valor por defecto en `app/core/dependencies.py`:
   ```python
   from typing import Annotated
 
@@ -43,10 +43,10 @@ FastAPI permite dos sintaxis equivalentes. Quédate solo con una de ellas:
    CurrentUserDep = Annotated[User, Depends(get_current_user)]
    ```
 3. Actualiza la firma de la función para usar los alias sin valores por defecto:
-   ```python
-   async def upload_report(session: SessionDep, current_user: CurrentUserDep, ...):
-       ...
-   ```
+  ```python
+  async def upload_report(session: DBSession, current_user: CurrentUser, ...):
+      ...
+  ```
 4. Guarda el archivo.
 
 ## 4. Verificar
@@ -61,13 +61,13 @@ El endpoint `/reports/upload` ya utiliza la sintaxis corregida (Opción A):
 ```python
 from fastapi import File, Form, UploadFile
 
-from app.api.deps import CurrentUserDep, SessionDep
+from app.core.dependencies import CurrentUser, DBSession
 
 
 @router.post("/upload", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
 async def upload_report(
-    session: SessionDep,
-    current_user: CurrentUserDep,
+    session: DBSession,
+    current_user: CurrentUser,
     pdf: UploadFile = File(...),
     patient_name: str | None = Form(None),
     exam_date: str | None = Form(None),

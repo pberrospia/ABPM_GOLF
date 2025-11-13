@@ -19,7 +19,7 @@ para obtener un paso a paso completo. En resumen:
 3. Visita `http://127.0.0.1:8000/docs` para explorar la API interactiva.
 
 El endpoint `/reports/upload` ahora emplea alias basados en `typing.Annotated`
-sin valores por defecto (por ejemplo, `SessionDep` y `CurrentUserDep`). De esta
+sin valores por defecto (por ejemplo, `DBSession` y `CurrentUser`). De esta
 forma FastAPI inyecta las dependencias sin disparar el `AssertionError`
 observado originalmente.
 

@@ -8,3 +8,4 @@ class User:
     id: int
     email: str
     full_name: str
+    signature_path: str | None = None

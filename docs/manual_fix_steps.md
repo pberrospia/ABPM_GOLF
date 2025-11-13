@@ -31,14 +31,14 @@ Sigue cada bloque en orden para que ambos inconvenientes desaparezcan.
    from sqlalchemy.ext.asyncio import AsyncSession
    from app.models.user import User
    from app.core.database import get_session
-   from app.api.deps import get_current_user
+   from app.services.auth import get_current_user
 
-   SessionDep = Annotated[AsyncSession, Depends(get_session)]
-   CurrentUserDep = Annotated[User, Depends(get_current_user)]
+   DBSession = Annotated[AsyncSession, Depends(get_session)]
+   CurrentUser = Annotated[User, Depends(get_current_user)]
 
    async def upload_report(
-       session: SessionDep,
-       current_user: CurrentUserDep,
+       session: DBSession,
+       current_user: CurrentUser,
        pdf: UploadFile = File(...),
        patient_name: str | None = Form(None),
        exam_date: str | None = Form(None),

@@ -1,30 +1,48 @@
 from __future__ import annotations
 
-from datetime import datetime
-from pathlib import Path
-from typing import Optional
+from datetime import date, datetime
+from typing import Any, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ReportBase(BaseModel):
-    filename: str
     patient_name: Optional[str] = None
-    exam_date: Optional[datetime] = None
+    exam_date: Optional[date] = None
+    conclusions: Optional[str] = None
+    recommendations: Optional[str] = None
 
 
 class ReportCreate(ReportBase):
-    pass
-
-
-class ReportRead(ReportBase):
-    id: int
-    owner_id: int
-    storage_path: Path
+    raw_text: str
+    raw_metrics: dict[str, Any]
+    analysis: dict[str, Any]
+    source_pdf_path: str
+    status: str = "draft"
 
 
 class ReportUpdate(ReportBase):
-    pass
+    status: Optional[str] = None
+    finalized_pdf_path: Optional[str] = None
+
+
+class ReportRead(BaseModel):
+    id: int
+    owner_id: int
+    patient_name: Optional[str]
+    exam_date: Optional[date]
+    raw_text: str
+    raw_metrics: dict[str, Any]
+    analysis: dict[str, Any]
+    source_pdf_path: str
+    status: str
+    conclusions: Optional[str] = None
+    recommendations: Optional[str] = None
+    finalized_pdf_path: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ABPMSummary(BaseModel):
@@ -32,6 +50,7 @@ class ABPMSummary(BaseModel):
     diastolic_mean: float
 
 
-class ABPMMetrics(BaseModel):
-    systolic_values: list[int]
-    diastolic_values: list[int]
+class ReportFinalized(BaseModel):
+    report: ReportRead
+    summary: ABPMSummary
+    pdf_path: str
