@@ -41,10 +41,9 @@ Ejecuta una única vez (con el entorno activado si aplica):
 pip install -r requirements.txt
 ```
 
-Si no cuentas con `requirements.txt`, instala los paquetes mínimos indicados en el README:
-```bash
-pip install fastapi uvicorn typer rich sqlalchemy pydantic pydantic-settings
-```
+El archivo incluye todas las librerías necesarias (FastAPI, SQLAlchemy, Typer,
+`pypdf`, etc.). Si prefieres instalar manualmente, recuerda incluir `pypdf`
+además del resto de paquetes listados en el README.
 
 ## 4. Ejecuta el servidor con el lanzador
 
@@ -63,7 +62,20 @@ Esto significa que el servidor FastAPI está listo.
 
 ## 5. Verifica la API en el navegador
 
-Abre tu navegador y visita `http://127.0.0.1:8000/docs`. Deberías ver la documentación interactiva de FastAPI. Prueba el endpoint `/reports/upload` para confirmar que ya no aparece el error `AssertionError: Cannot specify 'Depends' in 'Annotated'...`.
+Abre tu navegador y visita `http://127.0.0.1:8000/docs`. Deberías ver la
+documentación interactiva de FastAPI.
+
+1. Busca el grupo **reports** y expande el endpoint `POST /reports/upload`.
+2. Haz clic en **Try it out**.
+3. Proporciona un PDF de monitoreo ABPM en el campo `pdf` (puede ser un PDF de
+   prueba con texto que contenga lecturas como `Systolic 120` y `Diastolic 80`).
+4. Completa opcionalmente `patient_name` o `exam_date`.
+5. Pulsa **Execute**.
+
+El servicio guardará el archivo en la carpeta `storage`, extraerá el texto con
+`pypdf`, buscará lecturas sistólicas/diastólicas en el contenido y devolverá un
+JSON con la información del reporte, incluyendo el promedio calculado en el
+campo `analysis`.
 
 ## 6. Detén el servidor cuando termines
 

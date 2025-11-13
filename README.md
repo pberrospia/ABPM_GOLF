@@ -10,7 +10,7 @@ para obtener un paso a paso completo. En resumen:
 
 1. Instala las dependencias principales:
    ```bash
-   pip install fastapi uvicorn typer rich sqlalchemy pydantic pydantic-settings
+   pip install -r requirements.txt
    ```
 2. Ejecuta el servidor:
    ```bash
@@ -19,9 +19,10 @@ para obtener un paso a paso completo. En resumen:
 3. Visita `http://127.0.0.1:8000/docs` para explorar la API interactiva.
 
 El endpoint `/reports/upload` ahora emplea alias basados en `typing.Annotated`
-sin valores por defecto (por ejemplo, `DBSession` y `CurrentUser`). De esta
-forma FastAPI inyecta las dependencias sin disparar el `AssertionError`
-observado originalmente.
+sin valores por defecto (por ejemplo, `DBSession` y `CurrentUser`). El servicio
+extrae texto del PDF con [`pypdf`](https://pypi.org/project/pypdf/), analiza los
+valores sistólicos/diastólicos presentes en el documento y devuelve un resumen
+con los promedios calculados.
 
 ## ¿Problemas con `git pull`?
 

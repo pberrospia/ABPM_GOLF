@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+rich
+sqlalchemy
+pydantic
+pydantic-settings
+typer
+pypdf
